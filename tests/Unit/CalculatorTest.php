@@ -18,4 +18,10 @@ class CalculatorTest extends TestCase
         $calculator = new Calculator;
         $this->assertEquals(3, $calculator->subtract(5, 2));
     }
+
+    public function test_multiply()
+    {
+        $calculator = new Calculator;
+        $this->assertEquals(6, $calculator->multiply(2, 3));
+    }
 }
