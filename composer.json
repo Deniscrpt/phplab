@@ -14,5 +14,8 @@
         "psr-4": {
             "Tests\\": "tests/"
         }
+    },
+    "require": {
+        "fakerphp/faker": "^1.24"
     }
 }
