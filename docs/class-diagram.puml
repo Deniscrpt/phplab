@@ -1,0 +1,209 @@
+@startuml
+' Діаграма класів: Інтернет-блог (Laravel, MVC)
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #F7F7F5
+  BorderColor #555555
+}
+
+' ===== Моделі (Model) =====
+class User {
+  +id: int
+  +name: string
+  +email: string
+  -password: string
+  +createdAt: DateTime
+  --
+  +register(data: array): User
+  +login(email: string, password: string): bool
+  +logout(): void
+  +updatePassword(newPassword: string): bool
+  +hasRole(role: string): bool
+}
+
+class Author {
+  +pseudonym: string
+  +bio: string
+  +postsCount: int
+  +rating: float
+  +isVerified: bool
+  --
+  +createPost(data: array): Post
+  +editPost(post: Post, data: array): bool
+  +deletePost(post: Post): bool
+  +publishPost(post: Post): bool
+  +getMyPosts(): Post[]
+}
+
+class Admin {
+  +permissions: array
+  +lastLoginAt: DateTime
+  +isSuperAdmin: bool
+  +managedUsersCount: int
+  +accessLevel: int
+  --
+  +blockUser(user: User): bool
+  +unblockUser(user: User): bool
+  +deleteComment(comment: Comment): bool
+  +assignRole(user: User, role: string): void
+  +getStatistics(period: string): array
+}
+
+class Profile {
+  +id: int
+  +userId: int
+  +avatarUrl: string
+  +about: string
+  +website: string
+  --
+  +updateAvatar(file: Media): bool
+  +updateAbout(text: string): void
+  +getAvatarUrl(): string
+  +setWebsite(url: string): bool
+  +toArray(): array
+}
+
+class Post {
+  +id: int
+  +title: string
+  +slug: string
+  +body: string
+  +status: string
+  +viewsCount: int
+  +publishedAt: DateTime
+  --
+  +publish(): bool
+  +unpublish(): void
+  +incrementViews(): void
+  +addTag(tag: Tag): void
+  +getExcerpt(length: int): string
+  +isPublished(): bool
+}
+
+class Comment {
+  +id: int
+  +postId: int
+  +userId: int
+  +parentId: int
+  +body: string
+  +status: string
+  --
+  +approve(): void
+  +reject(): void
+  +edit(text: string): bool
+  +reply(body: string): Comment
+  +isApproved(): bool
+}
+
+class Category {
+  +id: int
+  +name: string
+  +slug: string
+  +description: string
+  +parentId: int
+  --
+  +getPosts(page: int): Post[]
+  +getPostsCount(): int
+  +getChildren(): Category[]
+  +rename(name: string): void
+  +generateSlug(): string
+}
+
+class Tag {
+  +id: int
+  +name: string
+  +slug: string
+  +color: string
+  +usageCount: int
+  --
+  +findOrCreate(name: string): Tag
+  +getPosts(): Post[]
+  +incrementUsage(): void
+  +rename(name: string): void
+  +merge(other: Tag): bool
+}
+
+class Media {
+  +id: int
+  +postId: int
+  +path: string
+  +mimeType: string
+  +sizeKb: int
+  --
+  +upload(file: File): Media
+  +delete(): bool
+  +getUrl(): string
+  +resize(width: int, height: int): void
+  +isImage(): bool
+}
+
+class Like {
+  +id: int
+  +userId: int
+  +postId: int
+  +type: string
+  +createdAt: DateTime
+  --
+  +toggle(user: User, post: Post): bool
+  +count(post: Post): int
+  +isLikedBy(user: User): bool
+  +remove(): void
+  +getUser(): User
+}
+
+' ===== Контролери (Controller) =====
+class PostController {
+  -perPage: int
+  -cacheTtl: int
+  -viewPath: string
+  -middleware: array
+  -defaultOrder: string
+  --
+  +index(request: Request): View
+  +show(slug: string): View
+  +store(request: Request): RedirectResponse
+  +update(request: Request, id: int): RedirectResponse
+  +destroy(id: int): RedirectResponse
+}
+
+class CommentController {
+  -perPage: int
+  -maxDepth: int
+  -moderationEnabled: bool
+  -middleware: array
+  -rateLimit: int
+  --
+  +store(request: Request, postId: int): RedirectResponse
+  +update(request: Request, id: int): RedirectResponse
+  +destroy(id: int): RedirectResponse
+  +approve(id: int): RedirectResponse
+  +reject(id: int): RedirectResponse
+}
+
+' ===== Зв'язки =====
+' Наслідування
+Author --|> User : наслідує
+Admin --|> User : наслідує
+
+' Композиція (час життя частини = часу життя цілого)
+User "1" *-- "1" Profile : має
+Post "1" *-- "0..*" Comment : містить
+
+' Агрегація (частина може існувати окремо)
+Post "0..*" o-- "0..*" Tag : позначений
+Post "1" o-- "0..*" Media : вкладення
+
+' Асоціація
+Author "1" --> "0..*" Post : пише
+Post "0..*" --> "1" Category : належить до
+User "1" --> "0..*" Comment : залишає
+User "1" --> "0..*" Like : ставить
+Post "1" --> "0..*" Like : отримує
+Admin "1" --> "0..*" Comment : модерує
+
+' Залежність контролерів від моделей
+PostController ..> Post : керує
+CommentController ..> Comment : керує
+@enduml

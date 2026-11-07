@@ -1,0 +1,78 @@
+@startuml
+' Діаграма варіантів використання: Інтернет-блог
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam usecase {
+  BackgroundColor #E8F5F1
+  BorderColor #1D9E75
+}
+skinparam actor {
+  BackgroundColor #FBE9E9
+  BorderColor #D85A5A
+}
+left to right direction
+
+actor "Читач" as Reader
+actor "Автор" as Author
+actor "Адміністратор" as Admin
+
+' Узагальнення між акторами
+Author --|> Reader
+Admin --|> Author
+
+rectangle "Інтернет-блог" {
+  ' Читач
+  usecase "Переглянути допис" as UC_View
+  usecase "Знайти допис" as UC_Find
+  usecase "Знайти за категорією" as UC_FindCat
+  usecase "Знайти за тегом" as UC_FindTag
+  usecase "Залишити коментар" as UC_Comment
+
+  ' Автор
+  usecase "Опублікувати допис" as UC_Publish
+  usecase "Редагувати допис" as UC_Edit
+  usecase "Видалити власний допис" as UC_Delete
+  usecase "Вибрати категорію\nта теги" as UC_Tags
+  usecase "Завантажити зображення" as UC_Image
+
+  ' Адміністратор
+  usecase "Модерувати коментарі" as UC_Moderate
+  usecase "Керувати користувачами" as UC_Users
+  usecase "Переглянути статистику" as UC_Stats
+  usecase "Заблокувати користувача" as UC_Block
+
+  ' Спільний
+  usecase "Авторизуватися" as UC_Auth
+}
+
+' Асоціації (по три варіанти використання на актора)
+Reader --> UC_View
+Reader --> UC_Find
+Reader --> UC_Comment
+
+Author --> UC_Publish
+Author --> UC_Edit
+Author --> UC_Delete
+
+Admin --> UC_Moderate
+Admin --> UC_Users
+Admin --> UC_Stats
+
+' Узагальнення варіантів використання
+UC_FindCat --|> UC_Find
+UC_FindTag --|> UC_Find
+
+' Включення (include)
+UC_Comment .> UC_Auth : <<include>>
+UC_Publish .> UC_Auth : <<include>>
+UC_Publish .> UC_Tags : <<include>>
+UC_Edit .> UC_Find : <<include>>
+UC_Moderate .> UC_Auth : <<include>>
+UC_Users .> UC_Auth : <<include>>
+UC_Stats .> UC_Auth : <<include>>
+
+' Розширення (extend)
+UC_Image .> UC_Publish : <<extend>>
+UC_Delete .> UC_View : <<extend>>
+UC_Block .> UC_Users : <<extend>>
+@enduml
