@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PostAccessTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * @return array<string, mixed>
      */
@@ -16,7 +20,7 @@ class PostAccessTest extends TestCase
         return [
             'title' => 'Новий допис про Laravel',
             'body' => 'Текст допису достатньої довжини для валідації.',
-            'category_id' => 1,
+            'category_id' => Category::factory()->create()->id,
             'published_at' => '2026-11-10 09:00:00',
         ];
     }
@@ -53,5 +57,10 @@ class PostAccessTest extends TestCase
             ->postJson('/posts', ['body' => 'коротко'])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['title', 'body', 'category_id']);
+    }
+
+    public function test_delete_requires_author_role(): void
+    {
+        $this->deleteJson('/posts/1')->assertStatus(403);
     }
 }

@@ -9,8 +9,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Бізнес-правило Use Case «Опублікувати допис»: створювати дописи
- * можуть лише користувачі з роллю Author або Admin (заголовок X-Author-Role).
+ * Бізнес-правило Use Case «Опублікувати допис»: змінювати дописи
+ * (POST, PUT, PATCH, DELETE) можуть лише користувачі з роллю Author або Admin
+ * (заголовок X-Author-Role).
  */
 class CheckAuthorRole
 {
@@ -18,7 +19,7 @@ class CheckAuthorRole
 
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->isMethod('post')) {
+        if (! $request->isMethodSafe()) {
             if (! $request->hasHeader('X-Author-Role')) {
                 return response()->json([
                     'status' => 'access_denied',
@@ -31,7 +32,7 @@ class CheckAuthorRole
             if (! in_array($role, self::ALLOWED_ROLES, true)) {
                 return response()->json([
                     'status' => 'forbidden_role',
-                    'message' => 'Відхилено: публікувати дописи можуть лише Author або Admin.',
+                    'message' => 'Відхилено: змінювати дописи можуть лише Author або Admin.',
                 ], 403);
             }
         }
