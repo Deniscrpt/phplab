@@ -27,6 +27,9 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      - name: Ensure SQLite database exists
+        run: touch database/database.sqlite
+
       - name: Lint code with Pint
         run: ./vendor/bin/pint --test
 
